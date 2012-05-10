@@ -781,3 +781,4 @@ sub is_block_device {
         return 0;
     }
 }
+
