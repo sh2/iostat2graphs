@@ -5,9 +5,10 @@ use warnings;
 
 use File::Path;
 use HTML::Entities;
+use POSIX qw/floor/;
+use RRDs;
 use Text::ParseWords;
 use Time::Local;
-use RRDs;
 
 if ($#ARGV != 8) {
     die 'Usage: perl iostat2graph.pl csv_file report_dir width height requests_limit bytes_limit qlength_limit wtime_limit stime_limit';
@@ -37,10 +38,6 @@ my @colors = (
 
 my ($hostname, @devices, @data);
 my ($start_time, $end_time) = (0, 0);
-
-my ($rmerged_max, $requests_max, $bytes_max) = (0, 0, 0);
-my ($rsize_max, $qlength_max, $wtime_max, $stime_max) = (0, 0, 0, 0);
-
 
 my $epoch = 978274800; # 2001/01/01 00:00:00
 my $top_dir = '..';
@@ -126,54 +123,6 @@ sub load_csv {
             
             if (defined($device_last) and ($cols[1] eq $device_last)) {
                 push @data, $buffer;
-            }
-            
-            # Find maximum values
-            # I/O Requests Merged
-            if ($rmerged_max < $cols[2]) {
-                $rmerged_max = $cols[2];
-            }
-            
-            if ($rmerged_max < $cols[3]) {
-                $rmerged_max = $cols[3];
-            }
-            
-            # I/O Requests
-            if ($requests_max < $cols[4]) {
-                $requests_max = $cols[4];
-            }
-            
-            if ($requests_max < $cols[5]) {
-                $requests_max = $cols[5];
-            }
-            
-            # I/O Bytes
-            if ($bytes_max < $cols[6]) {
-                $bytes_max = $cols[6];
-            }
-            
-            if ($bytes_max < $cols[7]) {
-                $bytes_max = $cols[7];
-            }
-            
-            # I/O Request Size
-            if ($rsize_max < $cols[8]) {
-                $rsize_max = $cols[8];
-            }
-            
-            # I/O Queue Length
-            if ($qlength_max < $cols[9]) {
-                $qlength_max = $cols[9];
-            }
-            
-            # I/O Wait Time
-            if ($wtime_max < $cols[10]) {
-                $wtime_max = $cols[10];
-            }
-            
-            # I/O Service Time
-            if ($stime_max < $cols[11]) {
-                $stime_max = $cols[11];
             }
         }
     }
@@ -263,6 +212,7 @@ sub create_dir {
 
 sub create_graph {
     my (@template, @options);
+    my $window = (floor(($end_time - $start_time) / 3600) + 1) * 60;
     
     # Template
     push @template, '--start';
@@ -286,14 +236,6 @@ sub create_graph {
         # rrqm/s wrqm/s
         @options = @template;
         
-        push @options, '--upper-limit';
-        
-        if ($rmerged_max < 10) {
-            push @options, 10;
-        } else {
-            push @options, $rmerged_max;
-        }
-        
         push @options, '--title';
         push @options, "I/O Requests Merged ${device} (/sec)";
         
@@ -313,14 +255,9 @@ sub create_graph {
         # r/s w/s
         @options = @template;
         
-        push @options, '--upper-limit';
-        
         if ($requests_limit != 0) {
+            push @options, '--upper-limit';
             push @options, $requests_limit;
-        } elsif ($requests_max < 10) {
-            push @options, 10;
-        } else {
-            push @options, $requests_max;
         }
         
         push @options, '--title';
@@ -342,14 +279,9 @@ sub create_graph {
         # rBytes/s wBytes/s
         @options = @template;
         
-        push @options, '--upper-limit';
-        
         if ($bytes_limit != 0) {
+            push @options, '--upper-limit';
             push @options, $bytes_limit;
-        } elsif ($bytes_max < 10) {
-            push @options, 10;
-        } else {
-            push @options, $bytes_max;
         }
         
         push @options, '--base';
@@ -374,14 +306,6 @@ sub create_graph {
         # avgrq-sz (Bytes)
         @options = @template;
         
-        push @options, '--upper-limit';
-        
-        if ($rsize_max < 10) {
-            push @options, 10;
-        } else {
-            push @options, $rsize_max;
-        }
-        
         push @options, '--base';
         push @options, 1024;
         
@@ -389,10 +313,10 @@ sub create_graph {
         push @options, "I/O Request Size ${device} (Bytes)";
         
         push @options, "DEF:RSIZE=${rrd_file}:RSIZE_${device}:AVERAGE";
-        push @options, "AREA:RSIZE#${colors[0]}:request_size_1sec";
+        push @options, "AREA:RSIZE#${colors[0]}:request_size";
         
-        push @options, "DEF:RSIZE_AVG=${rrd_file}:RSIZE_${device}:AVERAGE:step=60";
-        push @options, "LINE2:RSIZE_AVG#${colors[1]}:request_size_60sec";
+        push @options, "CDEF:RSIZE_AVG=RSIZE,${window},TREND";
+        push @options, "LINE1:RSIZE_AVG#${colors[1]}:request_size_${window}sec";
         
         RRDs::graph("${report_dir}/rsize_${device}.png", @options);
         
@@ -404,24 +328,19 @@ sub create_graph {
         # avgqu-sz
         @options = @template;
         
-        push @options, '--upper-limit';
-        
         if ($qlength_limit != 0) {
+            push @options, '--upper-limit';
             push @options, $qlength_limit;
-        } elsif ($qlength_max < 10) {
-            push @options, 10;
-        } else {
-            push @options, $qlength_max;
         }
         
         push @options, '--title';
         push @options, "I/O Queue Length ${device}";
         
         push @options, "DEF:QLENGTH=${rrd_file}:QLENGTH_${device}:AVERAGE";
-        push @options, "AREA:QLENGTH#${colors[0]}:queue_length_1sec";
+        push @options, "AREA:QLENGTH#${colors[0]}:queue_length";
         
-        push @options, "DEF:QLENGTH_AVG=${rrd_file}:QLENGTH_${device}:AVERAGE:step=60";
-        push @options, "LINE2:QLENGTH_AVG#${colors[1]}:queue_length_60sec";
+        push @options, "CDEF:QLENGTH_AVG=QLENGTH,${window},TREND";
+        push @options, "LINE1:QLENGTH_AVG#${colors[1]}:queue_length_${window}sec";
         
         RRDs::graph("${report_dir}/qlength_${device}.png", @options);
         
@@ -433,24 +352,19 @@ sub create_graph {
         # await
         @options = @template;
         
-        push @options, '--upper-limit';
-        
         if ($wtime_limit != 0) {
+            push @options, '--upper-limit';
             push @options, $wtime_limit;
-        } elsif ($wtime_max < 10) {
-            push @options, 10;
-        } else {
-            push @options, $wtime_max;
         }
         
         push @options, '--title';
         push @options, "I/O Wait Time ${device} (millisec)";
         
         push @options, "DEF:WTIME=${rrd_file}:WTIME_${device}:AVERAGE";
-        push @options, "AREA:WTIME#${colors[0]}:wait_time_1sec";
+        push @options, "AREA:WTIME#${colors[0]}:wait_time";
         
-        push @options, "DEF:WTIME_AVG=${rrd_file}:WTIME_${device}:AVERAGE:step=60";
-        push @options, "LINE2:WTIME_AVG#${colors[1]}:wait_time_60sec";
+        push @options, "CDEF:WTIME_AVG=WTIME,${window},TREND";
+        push @options, "LINE1:WTIME_AVG#${colors[1]}:wait_time_${window}sec";
         
         RRDs::graph("${report_dir}/wtime_${device}.png", @options);
         
@@ -462,24 +376,19 @@ sub create_graph {
         # svctm
         @options = @template;
         
-        push @options, '--upper-limit';
-        
         if ($stime_limit != 0) {
+            push @options, '--upper-limit';
             push @options, $stime_limit;
-        } elsif ($stime_max < 10) {
-            push @options, 10;
-        } else {
-            push @options, $stime_max;
         }
         
         push @options, '--title';
         push @options, "I/O Service Time ${device} (millisec)";
         
         push @options, "DEF:STIME=${rrd_file}:STIME_${device}:AVERAGE";
-        push @options, "AREA:STIME#${colors[0]}:service_time_1sec";
+        push @options, "AREA:STIME#${colors[0]}:service_time";
         
-        push @options, "DEF:STIME_AVG=${rrd_file}:STIME_${device}:AVERAGE:step=60";
-        push @options, "LINE2:STIME_AVG#${colors[1]}:service_time_60sec";
+        push @options, "CDEF:STIME_AVG=STIME,${window},TREND";
+        push @options, "LINE1:STIME_AVG#${colors[1]}:service_time_${window}sec";
         
         RRDs::graph("${report_dir}/stime_${device}.png", @options);
         
@@ -498,10 +407,10 @@ sub create_graph {
         push @options, "I/O Utilization ${device} (%)";
         
         push @options, "DEF:UTIL=${rrd_file}:UTIL_${device}:AVERAGE";
-        push @options, "AREA:UTIL#${colors[0]}:util_1sec";
+        push @options, "AREA:UTIL#${colors[0]}:util";
         
-        push @options, "DEF:UTIL_AVG=${rrd_file}:UTIL_${device}:AVERAGE:step=60";
-        push @options, "LINE2:UTIL_AVG#${colors[1]}:util_60sec";
+        push @options, "CDEF:UTIL_AVG=UTIL,${window},TREND";
+        push @options, "LINE1:UTIL_AVG#${colors[1]}:util_${window}sec";
         
         RRDs::graph("${report_dir}/util_${device}.png", @options);
         
