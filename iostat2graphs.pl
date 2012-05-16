@@ -5,7 +5,7 @@ use warnings;
 
 use File::Path;
 use HTML::Entities;
-use POSIX qw/floor/;
+use POSIX qw/floor ceil/;
 use RRDs;
 use Text::ParseWords;
 use Time::Local;
@@ -130,7 +130,8 @@ sub load_csv {
 
 sub create_rrd {
     my @options;
-    my $count = $end_time - $start_time + 1;
+    my $steps = floor(($end_time - $start_time) / 3600) + 1;
+    my $rows = ceil(($end_time - $start_time) / $steps) + 1;
     
     # --start
     push @options, '--start';
@@ -143,44 +144,44 @@ sub create_rrd {
     foreach my $device (@devices) {
         # rrqm/s wrqm/s
         push @options, "DS:RRMERGE_${device}:GAUGE:5:U:U";
-        push @options, "RRA:AVERAGE:0.5:1:${count}";
+        push @options, "RRA:AVERAGE:0.5:${steps}:${rows}";
         
         push @options, "DS:WRMERGE_${device}:GAUGE:5:U:U";
-        push @options, "RRA:AVERAGE:0.5:1:${count}";
+        push @options, "RRA:AVERAGE:0.5:${steps}:${rows}";
         
         # r/s w/s
         push @options, "DS:RREQ_${device}:GAUGE:5:U:U";
-        push @options, "RRA:AVERAGE:0.5:1:${count}";
+        push @options, "RRA:AVERAGE:0.5:${steps}:${rows}";
         
         push @options, "DS:WREQ_${device}:GAUGE:5:U:U";
-        push @options, "RRA:AVERAGE:0.5:1:${count}";
+        push @options, "RRA:AVERAGE:0.5:${steps}:${rows}";
         
         # rBytes/s wBytes/s
         push @options, "DS:RBYTE_${device}:GAUGE:5:U:U";
-        push @options, "RRA:AVERAGE:0.5:1:${count}";
+        push @options, "RRA:AVERAGE:0.5:${steps}:${rows}";
         
         push @options, "DS:WBYTE_${device}:GAUGE:5:U:U";
-        push @options, "RRA:AVERAGE:0.5:1:${count}";
+        push @options, "RRA:AVERAGE:0.5:${steps}:${rows}";
         
         # avgrq-sz (Bytes)
         push @options, "DS:RSIZE_${device}:GAUGE:5:U:U";
-        push @options, "RRA:AVERAGE:0.5:1:${count}";
+        push @options, "RRA:AVERAGE:0.5:${steps}:${rows}";
         
         # avgqu-sz
         push @options, "DS:QLENGTH_${device}:GAUGE:5:U:U";
-        push @options, "RRA:AVERAGE:0.5:1:${count}";
+        push @options, "RRA:AVERAGE:0.5:${steps}:${rows}";
         
         # await
         push @options, "DS:WTIME_${device}:GAUGE:5:U:U";
-        push @options, "RRA:AVERAGE:0.5:1:${count}";
+        push @options, "RRA:AVERAGE:0.5:${steps}:${rows}";
         
         # svctm
         push @options, "DS:STIME_${device}:GAUGE:5:U:U";
-        push @options, "RRA:AVERAGE:0.5:1:${count}";
+        push @options, "RRA:AVERAGE:0.5:${steps}:${rows}";
         
         # %util
         push @options, "DS:UTIL_${device}:GAUGE:5:U:U";
-        push @options, "RRA:AVERAGE:0.5:1:${count}";
+        push @options, "RRA:AVERAGE:0.5:${steps}:${rows}";
     }
     
     RRDs::create($rrd_file, @options);
