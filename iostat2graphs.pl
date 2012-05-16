@@ -36,12 +36,12 @@ my @colors = (
     'BF0000', '008F00'
     );
 
-my ($hostname, @devices, @data);
-my ($start_time, $end_time) = (0, 0);
-
 my $epoch = 978274800; # 2001/01/01 00:00:00
 my $top_dir = '..';
 my $rrd_file = '/dev/shm/iostat2graphs/' . &random_str() . '.rrd';
+
+my ($hostname, @devices, @data);
+my ($start_time, $end_time) = (0, 0);
 
 &load_csv();
 &create_rrd();
@@ -77,14 +77,14 @@ sub load_csv {
             
             if ($start_time == 0) {
                 if (!defined($hostname)) {
-                    die 'It is not a rstat CSV file. No \'Host\' column found.';
+                    die 'It is not a iostat CSV file. No \'Host\' column found.';
                 }
                 
                 $flag_device_pickup = 1;
                 $start_time = &get_unixtime($cols[0]);
             }
             
-            $cols[1] =~ tr/\//_/; # cciss/c0d0         -> cciss_c0d0
+            $cols[1] =~ tr/\//_/; # 'cciss/c0d0'       -> 'cciss_c0d0'
             $cols[6] *= 1024;     # rkB/s              -> rBytes/s
             $cols[7] *= 1024;     # wkB/s              -> wBytes/s
             $cols[8] *= 512;      # avgrq-sz (Sectors) -> avgrq-sz (Bytes)
