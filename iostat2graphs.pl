@@ -682,7 +682,7 @@ sub get_unixtime {
 sub is_block_device {
     my ($device) = @_;
     
-    if (($device =~ /[a-z]$/)
+    if (($device =~ /^\w+[a-z]$/)
         or ($device =~ /^md\d+$/)
         or ($device =~ /^cciss\/c\d+d\d+$/)) {
         
