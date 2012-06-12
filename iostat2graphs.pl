@@ -41,7 +41,7 @@ my $epoch = 978274800; # 2001/01/01 00:00:00
 my $top_dir = '..';
 my $rrd_file = '/dev/shm/iostat2graphs/' . &random_str() . '.rrd';
 
-my ($hostname, @devices, @data);
+my ($hostname, @devices, @data, %value);
 my ($start_time, $end_time) = (0, 0);
 
 &load_csv();
@@ -214,7 +214,7 @@ sub create_dir {
 }
 
 sub create_graph {
-    my (@template, @options);
+    my (@template, @options, @values);
     my $window = (floor(($end_time - $start_time) / 3600) + 1) * 60;
     
     # Template
@@ -248,12 +248,33 @@ sub create_graph {
         push @options, "DEF:WRMERGE=${rrd_file}:WRMERGE_${device}:AVERAGE";
         push @options, "LINE1:WRMERGE#${colors[1]}:write";
         
-        RRDs::graph("${report_dir}/rmerged_${device}.png", @options);
+        push @options, "VDEF:R_MIN=RRMERGE,MINIMUM";
+        push @options, "PRINT:R_MIN:%4.2lf";
+        push @options, "VDEF:R_AVG=RRMERGE,AVERAGE";
+        push @options, "PRINT:R_AVG:%4.2lf";
+        push @options, "VDEF:R_MAX=RRMERGE,MAXIMUM";
+        push @options, "PRINT:R_MAX:%4.2lf";
+        
+        push @options, "VDEF:W_MIN=WRMERGE,MINIMUM";
+        push @options, "PRINT:W_MIN:%4.2lf";
+        push @options, "VDEF:W_AVG=WRMERGE,AVERAGE";
+        push @options, "PRINT:W_AVG:%4.2lf";
+        push @options, "VDEF:W_MAX=WRMERGE,MAXIMUM";
+        push @options, "PRINT:W_MAX:%4.2lf";
+        
+        @values = RRDs::graph("${report_dir}/rmerged_${device}.png", @options);
         
         if (my $error = RRDs::error) {
             &delete_rrd();
             die $error;
         }
+        
+        $value{"RRMERGE_${device}"}->{'MIN'} = $values[0]->[0];
+        $value{"RRMERGE_${device}"}->{'AVG'} = $values[0]->[1];
+        $value{"RRMERGE_${device}"}->{'MAX'} = $values[0]->[2];
+        $value{"WRMERGE_${device}"}->{'MIN'} = $values[0]->[3];
+        $value{"WRMERGE_${device}"}->{'AVG'} = $values[0]->[4];
+        $value{"WRMERGE_${device}"}->{'MAX'} = $values[0]->[5];
         
         # r/s w/s
         @options = @template;
@@ -272,12 +293,33 @@ sub create_graph {
         push @options, "DEF:WREQ=${rrd_file}:WREQ_${device}:AVERAGE";
         push @options, "LINE1:WREQ#${colors[1]}:write";
         
-        RRDs::graph("${report_dir}/requests_${device}.png", @options);
+        push @options, "VDEF:R_MIN=RREQ,MINIMUM";
+        push @options, "PRINT:R_MIN:%4.2lf";
+        push @options, "VDEF:R_AVG=RREQ,AVERAGE";
+        push @options, "PRINT:R_AVG:%4.2lf";
+        push @options, "VDEF:R_MAX=RREQ,MAXIMUM";
+        push @options, "PRINT:R_MAX:%4.2lf";
+        
+        push @options, "VDEF:W_MIN=WREQ,MINIMUM";
+        push @options, "PRINT:W_MIN:%4.2lf";
+        push @options, "VDEF:W_AVG=WREQ,AVERAGE";
+        push @options, "PRINT:W_AVG:%4.2lf";
+        push @options, "VDEF:W_MAX=WREQ,MAXIMUM";
+        push @options, "PRINT:W_MAX:%4.2lf";
+        
+        @values = RRDs::graph("${report_dir}/requests_${device}.png", @options);
         
         if (my $error = RRDs::error) {
             &delete_rrd();
             die $error;
         }
+        
+        $value{"RREQ_${device}"}->{'MIN'} = $values[0]->[0];
+        $value{"RREQ_${device}"}->{'AVG'} = $values[0]->[1];
+        $value{"RREQ_${device}"}->{'MAX'} = $values[0]->[2];
+        $value{"WREQ_${device}"}->{'MIN'} = $values[0]->[3];
+        $value{"WREQ_${device}"}->{'AVG'} = $values[0]->[4];
+        $value{"WREQ_${device}"}->{'MAX'} = $values[0]->[5];
         
         # rBytes/s wBytes/s
         @options = @template;
@@ -299,12 +341,33 @@ sub create_graph {
         push @options, "DEF:WBYTE=${rrd_file}:WBYTE_${device}:AVERAGE";
         push @options, "LINE1:WBYTE#${colors[1]}:write";
         
-        RRDs::graph("${report_dir}/bytes_${device}.png", @options);
+        push @options, "VDEF:R_MIN=RBYTE,MINIMUM";
+        push @options, "PRINT:R_MIN:%4.2lf %s";
+        push @options, "VDEF:R_AVG=RBYTE,AVERAGE";
+        push @options, "PRINT:R_AVG:%4.2lf %s";
+        push @options, "VDEF:R_MAX=RBYTE,MAXIMUM";
+        push @options, "PRINT:R_MAX:%4.2lf %s";
+        
+        push @options, "VDEF:W_MIN=WBYTE,MINIMUM";
+        push @options, "PRINT:W_MIN:%4.2lf %s";
+        push @options, "VDEF:W_AVG=WBYTE,AVERAGE";
+        push @options, "PRINT:W_AVG:%4.2lf %s";
+        push @options, "VDEF:W_MAX=WBYTE,MAXIMUM";
+        push @options, "PRINT:W_MAX:%4.2lf %s";
+        
+        @values = RRDs::graph("${report_dir}/bytes_${device}.png", @options);
         
         if (my $error = RRDs::error) {
             &delete_rrd();
             die $error;
         }
+        
+        $value{"RBYTE_${device}"}->{'MIN'} = $values[0]->[0];
+        $value{"RBYTE_${device}"}->{'AVG'} = $values[0]->[1];
+        $value{"RBYTE_${device}"}->{'MAX'} = $values[0]->[2];
+        $value{"WBYTE_${device}"}->{'MIN'} = $values[0]->[3];
+        $value{"WBYTE_${device}"}->{'AVG'} = $values[0]->[4];
+        $value{"WBYTE_${device}"}->{'MAX'} = $values[0]->[5];
         
         # avgrq-sz (Bytes)
         @options = @template;
@@ -321,12 +384,23 @@ sub create_graph {
         push @options, "CDEF:RSIZE_AVG=RSIZE,${window},TREND";
         push @options, "LINE1:RSIZE_AVG#${colors[1]}:request_size_${window}sec";
         
-        RRDs::graph("${report_dir}/rsize_${device}.png", @options);
+        push @options, "VDEF:R_MIN=RSIZE,MINIMUM";
+        push @options, "PRINT:R_MIN:%4.2lf %s";
+        push @options, "VDEF:R_AVG=RSIZE,AVERAGE";
+        push @options, "PRINT:R_AVG:%4.2lf %s";
+        push @options, "VDEF:R_MAX=RSIZE,MAXIMUM";
+        push @options, "PRINT:R_MAX:%4.2lf %s";
+        
+        @values = RRDs::graph("${report_dir}/rsize_${device}.png", @options);
         
         if (my $error = RRDs::error) {
             &delete_rrd();
             die $error;
         }
+        
+        $value{"RSIZE_${device}"}->{'MIN'} = $values[0]->[0];
+        $value{"RSIZE_${device}"}->{'AVG'} = $values[0]->[1];
+        $value{"RSIZE_${device}"}->{'MAX'} = $values[0]->[2];
         
         # avgqu-sz
         @options = @template;
@@ -345,12 +419,23 @@ sub create_graph {
         push @options, "CDEF:QLENGTH_AVG=QLENGTH,${window},TREND";
         push @options, "LINE1:QLENGTH_AVG#${colors[1]}:queue_length_${window}sec";
         
-        RRDs::graph("${report_dir}/qlength_${device}.png", @options);
+        push @options, "VDEF:Q_MIN=QLENGTH,MINIMUM";
+        push @options, "PRINT:Q_MIN:%4.2lf";
+        push @options, "VDEF:Q_AVG=QLENGTH,AVERAGE";
+        push @options, "PRINT:Q_AVG:%4.2lf";
+        push @options, "VDEF:Q_MAX=QLENGTH,MAXIMUM";
+        push @options, "PRINT:Q_MAX:%4.2lf";
+        
+        @values = RRDs::graph("${report_dir}/qlength_${device}.png", @options);
         
         if (my $error = RRDs::error) {
             &delete_rrd();
             die $error;
         }
+        
+        $value{"QLENGTH_${device}"}->{'MIN'} = $values[0]->[0];
+        $value{"QLENGTH_${device}"}->{'AVG'} = $values[0]->[1];
+        $value{"QLENGTH_${device}"}->{'MAX'} = $values[0]->[2];
         
         # await
         @options = @template;
@@ -369,12 +454,23 @@ sub create_graph {
         push @options, "CDEF:WTIME_AVG=WTIME,${window},TREND";
         push @options, "LINE1:WTIME_AVG#${colors[1]}:wait_time_${window}sec";
         
-        RRDs::graph("${report_dir}/wtime_${device}.png", @options);
+        push @options, "VDEF:W_MIN=WTIME,MINIMUM";
+        push @options, "PRINT:W_MIN:%4.2lf";
+        push @options, "VDEF:W_AVG=WTIME,AVERAGE";
+        push @options, "PRINT:W_AVG:%4.2lf";
+        push @options, "VDEF:W_MAX=WTIME,MAXIMUM";
+        push @options, "PRINT:W_MAX:%4.2lf";
+        
+        @values = RRDs::graph("${report_dir}/wtime_${device}.png", @options);
         
         if (my $error = RRDs::error) {
             &delete_rrd();
             die $error;
         }
+        
+        $value{"WTIME_${device}"}->{'MIN'} = $values[0]->[0];
+        $value{"WTIME_${device}"}->{'AVG'} = $values[0]->[1];
+        $value{"WTIME_${device}"}->{'MAX'} = $values[0]->[2];
         
         # svctm
         @options = @template;
@@ -393,12 +489,23 @@ sub create_graph {
         push @options, "CDEF:STIME_AVG=STIME,${window},TREND";
         push @options, "LINE1:STIME_AVG#${colors[1]}:service_time_${window}sec";
         
-        RRDs::graph("${report_dir}/stime_${device}.png", @options);
+        push @options, "VDEF:S_MIN=STIME,MINIMUM";
+        push @options, "PRINT:S_MIN:%4.2lf";
+        push @options, "VDEF:S_AVG=STIME,AVERAGE";
+        push @options, "PRINT:S_AVG:%4.2lf";
+        push @options, "VDEF:S_MAX=STIME,MAXIMUM";
+        push @options, "PRINT:S_MAX:%4.2lf";
+        
+        @values = RRDs::graph("${report_dir}/stime_${device}.png", @options);
         
         if (my $error = RRDs::error) {
             &delete_rrd();
             die $error;
         }
+        
+        $value{"STIME_${device}"}->{'MIN'} = $values[0]->[0];
+        $value{"STIME_${device}"}->{'AVG'} = $values[0]->[1];
+        $value{"STIME_${device}"}->{'MAX'} = $values[0]->[2];
         
         # %util
         @options = @template;
@@ -410,18 +517,28 @@ sub create_graph {
         push @options, "I/O Utilization ${device} (%)";
         
         push @options, "DEF:UTIL=${rrd_file}:UTIL_${device}:AVERAGE";
-        push @options, "AREA:UTIL#${colors[0]}:util";
+        push @options, "AREA:UTIL#${colors[0]}:utilization";
         
         push @options, "CDEF:UTIL_AVG=UTIL,${window},TREND";
-        push @options, "LINE1:UTIL_AVG#${colors[1]}:util_${window}sec";
+        push @options, "LINE1:UTIL_AVG#${colors[1]}:utilization_${window}sec";
         
-        RRDs::graph("${report_dir}/util_${device}.png", @options);
+        push @options, "VDEF:U_MIN=UTIL,MINIMUM";
+        push @options, "PRINT:U_MIN:%4.2lf";
+        push @options, "VDEF:U_AVG=UTIL,AVERAGE";
+        push @options, "PRINT:U_AVG:%4.2lf";
+        push @options, "VDEF:U_MAX=UTIL,MAXIMUM";
+        push @options, "PRINT:U_MAX:%4.2lf";
+        
+        @values = RRDs::graph("${report_dir}/util_${device}.png", @options);
         
         if (my $error = RRDs::error) {
             &delete_rrd();
             die $error;
         }
         
+        $value{"UTIL_${device}"}->{'MIN'} = $values[0]->[0];
+        $value{"UTIL_${device}"}->{'AVG'} = $values[0]->[1];
+        $value{"UTIL_${device}"}->{'MAX'} = $values[0]->[2];
     }
 }
 
@@ -457,6 +574,12 @@ sub create_html {
       }
       .hero-unit {
         padding: 24px;
+      }
+      th.header {
+        text-align: center;
+      }
+      td.number {
+        text-align: right;
       }
     </style>
   </head>
@@ -555,10 +678,34 @@ _EOF_
 _EOF_
     
     foreach my $device (@devices) {
-        print $fh ' ' x 10;
-        print $fh "<h3 id=\"rmerged_${device}\">I/O Requests Merged ${device}</h3>\n";
-        print $fh ' ' x 10;
-        print $fh "<p><img src=\"rmerged_${device}.png\" alt=\"I/O Requests Merged ${device}\"></p>\n";
+        print $fh <<_EOF_;
+          <h3 id="rmerged_${device}">I/O Requests Merged ${device}</h3>
+          <p><img src="rmerged_${device}.png" alt="I/O Requests Merged ${device}"></p>
+          <table class="table table-condensed">
+            <thead>
+              <tr>
+                <th class="header">I/O Requests Merged ${device} (/sec)</th>
+                <th class="header">Minimum</th>
+                <th class="header">Average</th>
+                <th class="header">Maximum</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>read</td>
+                <td class="number">$value{"RRMERGE_${device}"}->{'MIN'}</td>
+                <td class="number">$value{"RRMERGE_${device}"}->{'AVG'}</td>
+                <td class="number">$value{"RRMERGE_${device}"}->{'MAX'}</td>
+              </tr>
+              <tr>
+                <td>write</td>
+                <td class="number">$value{"WRMERGE_${device}"}->{'MIN'}</td>
+                <td class="number">$value{"WRMERGE_${device}"}->{'AVG'}</td>
+                <td class="number">$value{"WRMERGE_${device}"}->{'MAX'}</td>
+              </tr>
+            </tbody>
+          </table>
+_EOF_
     }
     
     print $fh <<_EOF_;
@@ -567,10 +714,34 @@ _EOF_
 _EOF_
     
     foreach my $device (@devices) {
-        print $fh ' ' x 10;
-        print $fh "<h3 id=\"requests_${device}\">I/O Requests ${device}</h3>\n";
-        print $fh ' ' x 10;
-        print $fh "<p><img src=\"requests_${device}.png\" alt=\"I/O Requests ${device}\"></p>\n";
+        print $fh <<_EOF_;
+          <h3 id="requests_${device}">I/O Requests ${device}</h3>
+          <p><img src="requests_${device}.png" alt="I/O Requests ${device}"></p>
+          <table class="table table-condensed">
+            <thead>
+              <tr>
+                <th class="header">I/O Requests ${device} (/sec)</th>
+                <th class="header">Minimum</th>
+                <th class="header">Average</th>
+                <th class="header">Maximum</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>read</td>
+                <td class="number">$value{"RREQ_${device}"}->{'MIN'}</td>
+                <td class="number">$value{"RREQ_${device}"}->{'AVG'}</td>
+                <td class="number">$value{"RREQ_${device}"}->{'MAX'}</td>
+              </tr>
+              <tr>
+                <td>write</td>
+                <td class="number">$value{"WREQ_${device}"}->{'MIN'}</td>
+                <td class="number">$value{"WREQ_${device}"}->{'AVG'}</td>
+                <td class="number">$value{"WREQ_${device}"}->{'MAX'}</td>
+              </tr>
+            </tbody>
+          </table>
+_EOF_
     }
     
     print $fh <<_EOF_;
@@ -579,10 +750,34 @@ _EOF_
 _EOF_
     
     foreach my $device (@devices) {
-        print $fh ' ' x 10;
-        print $fh "<h3 id=\"bytes_${device}\">I/O Bytes ${device}</h3>\n";
-        print $fh ' ' x 10;
-        print $fh "<p><img src=\"bytes_${device}.png\" alt=\"I/O Bytes ${device}\"></p>\n";
+        print $fh <<_EOF_;
+          <h3 id="bytes_${device}">I/O Bytes ${device}</h3>
+          <p><img src="bytes_${device}.png" alt="I/O Bytes ${device}"></p>
+          <table class="table table-condensed">
+            <thead>
+              <tr>
+                <th class="header">I/O Bytes ${device} (Bytes/sec)</th>
+                <th class="header">Minimum</th>
+                <th class="header">Average</th>
+                <th class="header">Maximum</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>read</td>
+                <td class="number">$value{"RBYTE_${device}"}->{'MIN'}</td>
+                <td class="number">$value{"RBYTE_${device}"}->{'AVG'}</td>
+                <td class="number">$value{"RBYTE_${device}"}->{'MAX'}</td>
+              </tr>
+              <tr>
+                <td>write</td>
+                <td class="number">$value{"WBYTE_${device}"}->{'MIN'}</td>
+                <td class="number">$value{"WBYTE_${device}"}->{'AVG'}</td>
+                <td class="number">$value{"WBYTE_${device}"}->{'MAX'}</td>
+              </tr>
+            </tbody>
+          </table>
+_EOF_
     }
     
     print $fh <<_EOF_;
@@ -591,10 +786,28 @@ _EOF_
 _EOF_
     
     foreach my $device (@devices) {
-        print $fh ' ' x 10;
-        print $fh "<h3 id=\"rsize_${device}\">I/O Request Size ${device}</h3>\n";
-        print $fh ' ' x 10;
-        print $fh "<p><img src=\"rsize_${device}.png\" alt=\"I/O Request Size ${device}\"></p>\n";
+        print $fh <<_EOF_;
+          <h3 id="rsize_${device}">I/O Request Size ${device}</h3>
+          <p><img src="rsize_${device}.png" alt="I/O Request Size ${device}"></p>
+          <table class="table table-condensed">
+            <thead>
+              <tr>
+                <th class="header">I/O Request Size ${device} (Bytes)</th>
+                <th class="header">Minimum</th>
+                <th class="header">Average</th>
+                <th class="header">Maximum</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>request_size</td>
+                <td class="number">$value{"RSIZE_${device}"}->{'MIN'}</td>
+                <td class="number">$value{"RSIZE_${device}"}->{'AVG'}</td>
+                <td class="number">$value{"RSIZE_${device}"}->{'MAX'}</td>
+              </tr>
+            </tbody>
+          </table>
+_EOF_
     }
     
     print $fh <<_EOF_;
@@ -603,10 +816,28 @@ _EOF_
 _EOF_
     
     foreach my $device (@devices) {
-        print $fh ' ' x 10;
-        print $fh "<h3 id=\"qlength_${device}\">I/O Queue Length ${device}</h3>\n";
-        print $fh ' ' x 10;
-        print $fh "<p><img src=\"qlength_${device}.png\" alt=\"I/O Queue Length ${device}\"></p>\n";
+        print $fh <<_EOF_;
+          <h3 id="qlength_${device}">I/O Queue Length ${device}</h3>
+          <p><img src="qlength_${device}.png" alt="I/O Queue Length ${device}"></p>
+          <table class="table table-condensed">
+            <thead>
+              <tr>
+                <th class="header">I/O Queue Length ${device}</th>
+                <th class="header">Minimum</th>
+                <th class="header">Average</th>
+                <th class="header">Maximum</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>queue_length</td>
+                <td class="number">$value{"QLENGTH_${device}"}->{'MIN'}</td>
+                <td class="number">$value{"QLENGTH_${device}"}->{'AVG'}</td>
+                <td class="number">$value{"QLENGTH_${device}"}->{'MAX'}</td>
+              </tr>
+            </tbody>
+          </table>
+_EOF_
     }
     
     print $fh <<_EOF_;
@@ -615,10 +846,28 @@ _EOF_
 _EOF_
     
     foreach my $device (@devices) {
-        print $fh ' ' x 10;
-        print $fh "<h3 id=\"wtime_${device}\">I/O Wait Time ${device}</h3>\n";
-        print $fh ' ' x 10;
-        print $fh "<p><img src=\"wtime_${device}.png\" alt=\"I/O Wait Time ${device}\"></p>\n";
+        print $fh <<_EOF_;
+          <h3 id="wtime_${device}">I/O Wait Time ${device}</h3>
+          <p><img src="wtime_${device}.png" alt="I/O Wait Time ${device}"></p>
+          <table class="table table-condensed">
+            <thead>
+              <tr>
+                <th class="header">I/O Wait Time ${device} (millisec)</th>
+                <th class="header">Minimum</th>
+                <th class="header">Average</th>
+                <th class="header">Maximum</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>wait_time</td>
+                <td class="number">$value{"WTIME_${device}"}->{'MIN'}</td>
+                <td class="number">$value{"WTIME_${device}"}->{'AVG'}</td>
+                <td class="number">$value{"WTIME_${device}"}->{'MAX'}</td>
+              </tr>
+            </tbody>
+          </table>
+_EOF_
     }
     
     print $fh <<_EOF_;
@@ -627,10 +876,28 @@ _EOF_
 _EOF_
     
     foreach my $device (@devices) {
-        print $fh ' ' x 10;
-        print $fh "<h3 id=\"stime_${device}\">I/O Service Time ${device}</h3>\n";
-        print $fh ' ' x 10;
-        print $fh "<p><img src=\"stime_${device}.png\" alt=\"I/O Service Time ${device}\"></p>\n";
+        print $fh <<_EOF_;
+          <h3 id="stime_${device}">I/O Service Time ${device}</h3>
+          <p><img src="stime_${device}.png" alt="I/O Service Time ${device}"></p>
+          <table class="table table-condensed">
+            <thead>
+              <tr>
+                <th class="header">I/O Service Time ${device} (millisec)</th>
+                <th class="header">Minimum</th>
+                <th class="header">Average</th>
+                <th class="header">Maximum</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>service_time</td>
+                <td class="number">$value{"STIME_${device}"}->{'MIN'}</td>
+                <td class="number">$value{"STIME_${device}"}->{'AVG'}</td>
+                <td class="number">$value{"STIME_${device}"}->{'MAX'}</td>
+              </tr>
+            </tbody>
+          </table>
+_EOF_
     }
     
     print $fh <<_EOF_;
@@ -639,10 +906,28 @@ _EOF_
 _EOF_
     
     foreach my $device (@devices) {
-        print $fh ' ' x 10;
-        print $fh "<h3 id=\"util_${device}\">I/O Utilization ${device}</h3>\n";
-        print $fh ' ' x 10;
-        print $fh "<p><img src=\"util_${device}.png\" alt=\"I/O Utilization ${device}\"></p>\n";
+        print $fh <<_EOF_;
+          <h3 id="util_${device}">I/O Utilization ${device}</h3>
+          <p><img src="util_${device}.png" alt="I/O Utilization ${device}"></p>
+          <table class="table table-condensed">
+            <thead>
+              <tr>
+                <th class="header">I/O Utilization ${device} (%)</th>
+                <th class="header">Minimum</th>
+                <th class="header">Average</th>
+                <th class="header">Maximum</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>utilization</td>
+                <td class="number">$value{"UTIL_${device}"}->{'MIN'}</td>
+                <td class="number">$value{"UTIL_${device}"}->{'AVG'}</td>
+                <td class="number">$value{"UTIL_${device}"}->{'MAX'}</td>
+              </tr>
+            </tbody>
+          </table>
+_EOF_
     }
     
     print $fh <<_EOF_;
