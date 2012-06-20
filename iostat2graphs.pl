@@ -382,7 +382,7 @@ sub create_graph {
         push @options, "AREA:RSIZE#${colors[0]}:request_size";
         
         push @options, "CDEF:RSIZE_AVG=RSIZE,${window},TREND";
-        push @options, "LINE1:RSIZE_AVG#${colors[1]}:request_size_${window}sec";
+        push @options, "LINE1:RSIZE_AVG#${colors[1]}:request_size_${window}secs";
         
         push @options, "VDEF:R_MIN=RSIZE,MINIMUM";
         push @options, "PRINT:R_MIN:%4.2lf %s";
@@ -417,7 +417,7 @@ sub create_graph {
         push @options, "AREA:QLENGTH#${colors[0]}:queue_length";
         
         push @options, "CDEF:QLENGTH_AVG=QLENGTH,${window},TREND";
-        push @options, "LINE1:QLENGTH_AVG#${colors[1]}:queue_length_${window}sec";
+        push @options, "LINE1:QLENGTH_AVG#${colors[1]}:queue_length_${window}secs";
         
         push @options, "VDEF:Q_MIN=QLENGTH,MINIMUM";
         push @options, "PRINT:Q_MIN:%4.2lf";
@@ -446,13 +446,13 @@ sub create_graph {
         }
         
         push @options, '--title';
-        push @options, "I/O Wait Time ${device} (millisec)";
+        push @options, "I/O Wait Time ${device} (millisecs)";
         
         push @options, "DEF:WTIME=${rrd_file}:WTIME_${device}:AVERAGE";
         push @options, "AREA:WTIME#${colors[0]}:wait_time";
         
         push @options, "CDEF:WTIME_AVG=WTIME,${window},TREND";
-        push @options, "LINE1:WTIME_AVG#${colors[1]}:wait_time_${window}sec";
+        push @options, "LINE1:WTIME_AVG#${colors[1]}:wait_time_${window}secs";
         
         push @options, "VDEF:W_MIN=WTIME,MINIMUM";
         push @options, "PRINT:W_MIN:%4.2lf";
@@ -481,13 +481,13 @@ sub create_graph {
         }
         
         push @options, '--title';
-        push @options, "I/O Service Time ${device} (millisec)";
+        push @options, "I/O Service Time ${device} (millisecs)";
         
         push @options, "DEF:STIME=${rrd_file}:STIME_${device}:AVERAGE";
         push @options, "AREA:STIME#${colors[0]}:service_time";
         
         push @options, "CDEF:STIME_AVG=STIME,${window},TREND";
-        push @options, "LINE1:STIME_AVG#${colors[1]}:service_time_${window}sec";
+        push @options, "LINE1:STIME_AVG#${colors[1]}:service_time_${window}secs";
         
         push @options, "VDEF:S_MIN=STIME,MINIMUM";
         push @options, "PRINT:S_MIN:%4.2lf";
@@ -520,7 +520,7 @@ sub create_graph {
         push @options, "AREA:UTIL#${colors[0]}:utilization";
         
         push @options, "CDEF:UTIL_AVG=UTIL,${window},TREND";
-        push @options, "LINE1:UTIL_AVG#${colors[1]}:utilization_${window}sec";
+        push @options, "LINE1:UTIL_AVG#${colors[1]}:utilization_${window}secs";
         
         push @options, "VDEF:U_MIN=UTIL,MINIMUM";
         push @options, "PRINT:U_MIN:%4.2lf";
@@ -670,7 +670,7 @@ _EOF_
             <ul>
               <li>Hostname: ${hostname_enc}</li>
               <li>Datetime: ${datetime}</li>
-              <li>Duration: ${duration} (seconds)</li>
+              <li>Duration: ${duration} (secs)</li>
             </ul>
           </div>
           <p><a href="i_${report_suffix}.zip">Download a Zip file</a></p>
@@ -852,7 +852,7 @@ _EOF_
           <table class="table table-condensed">
             <thead>
               <tr>
-                <th class="header">I/O Wait Time ${device} (millisec)</th>
+                <th class="header">I/O Wait Time ${device} (millisecs)</th>
                 <th class="header">Minimum</th>
                 <th class="header">Average</th>
                 <th class="header">Maximum</th>
@@ -882,7 +882,7 @@ _EOF_
           <table class="table table-condensed">
             <thead>
               <tr>
-                <th class="header">I/O Service Time ${device} (millisec)</th>
+                <th class="header">I/O Service Time ${device} (millisecs)</th>
                 <th class="header">Minimum</th>
                 <th class="header">Average</th>
                 <th class="header">Maximum</th>
