@@ -42,7 +42,7 @@ my $top_dir = '..';
 my $rrd_file = '/dev/shm/iostat2graphs/' . &random_str() . '.rrd';
 
 my ($hostname, @devices, @data, %value);
-my ($start_time, $end_time) = (0, 0);
+my ($flag_sysstat_090102, $start_time, $end_time) = (0, 0, 0);
 
 &load_csv();
 &create_rrd();
@@ -73,6 +73,10 @@ sub load_csv {
             
         } elsif ($line =~ /^Datetime/) {
             # Header
+            if ($line =~ /r_await,w_await/) {
+                # sysstat 9.1.2 or later
+                $flag_sysstat_090102 = 1;
+            }
         } else {
             # Body
             my @cols = parse_line(',', 0, $line);
@@ -176,6 +180,16 @@ sub create_rrd {
         # await
         push @options, "DS:WTIME_${device}:GAUGE:5:U:U";
         push @options, "RRA:AVERAGE:0.5:${steps}:${rows}";
+        
+        if ($flag_sysstat_090102) {
+            # await
+            push @options, "DS:RWTIME_${device}:GAUGE:5:U:U";
+            push @options, "RRA:AVERAGE:0.5:${steps}:${rows}";
+            
+            # await
+            push @options, "DS:WWTIME_${device}:GAUGE:5:U:U";
+            push @options, "RRA:AVERAGE:0.5:${steps}:${rows}";
+        }
         
         # svctm
         push @options, "DS:STIME_${device}:GAUGE:5:U:U";
@@ -472,6 +486,78 @@ sub create_graph {
         $value{"WTIME_${device}"}->{'AVG'} = $values[0]->[1];
         $value{"WTIME_${device}"}->{'MAX'} = $values[0]->[2];
         
+        if ($flag_sysstat_090102) {
+            # r_await
+            @options = @template;
+            
+            if ($wtime_limit != 0) {
+                push @options, '--upper-limit';
+                push @options, $wtime_limit;
+            }
+            
+            push @options, '--title';
+            push @options, "I/O Read Wait Time ${device} (millisecs)";
+            
+            push @options, "DEF:RWTIME=${rrd_file}:RWTIME_${device}:AVERAGE";
+            push @options, "AREA:RWTIME#${colors[0]}:read_wait_time";
+            
+            push @options, "CDEF:RWTIME_AVG=RWTIME,${window},TREND";
+            push @options, "LINE1:RWTIME_AVG#${colors[1]}:read_wait_time_${window}secs";
+            
+            push @options, "VDEF:R_MIN=RWTIME,MINIMUM";
+            push @options, "PRINT:R_MIN:%4.2lf";
+            push @options, "VDEF:R_AVG=RWTIME,AVERAGE";
+            push @options, "PRINT:R_AVG:%4.2lf";
+            push @options, "VDEF:R_MAX=RWTIME,MAXIMUM";
+            push @options, "PRINT:R_MAX:%4.2lf";
+            
+            @values = RRDs::graph("${report_dir}/rwtime_${device}.png", @options);
+            
+            if (my $error = RRDs::error) {
+                &delete_rrd();
+                die $error;
+            }
+            
+            $value{"RWTIME_${device}"}->{'MIN'} = $values[0]->[0];
+            $value{"RWTIME_${device}"}->{'AVG'} = $values[0]->[1];
+            $value{"RWTIME_${device}"}->{'MAX'} = $values[0]->[2];
+            
+            # w_await
+            @options = @template;
+            
+            if ($wtime_limit != 0) {
+                push @options, '--upper-limit';
+                push @options, $wtime_limit;
+            }
+            
+            push @options, '--title';
+            push @options, "I/O Write Wait Time ${device} (millisecs)";
+            
+            push @options, "DEF:WWTIME=${rrd_file}:WWTIME_${device}:AVERAGE";
+            push @options, "AREA:WWTIME#${colors[0]}:write_wait_time";
+            
+            push @options, "CDEF:WWTIME_AVG=WWTIME,${window},TREND";
+            push @options, "LINE1:WWTIME_AVG#${colors[1]}:write_wait_time_${window}secs";
+            
+            push @options, "VDEF:W_MIN=WWTIME,MINIMUM";
+            push @options, "PRINT:W_MIN:%4.2lf";
+            push @options, "VDEF:W_AVG=WWTIME,AVERAGE";
+            push @options, "PRINT:W_AVG:%4.2lf";
+            push @options, "VDEF:W_MAX=WWTIME,MAXIMUM";
+            push @options, "PRINT:W_MAX:%4.2lf";
+            
+            @values = RRDs::graph("${report_dir}/wwtime_${device}.png", @options);
+            
+            if (my $error = RRDs::error) {
+                &delete_rrd();
+                die $error;
+            }
+            
+            $value{"WWTIME_${device}"}->{'MIN'} = $values[0]->[0];
+            $value{"WWTIME_${device}"}->{'AVG'} = $values[0]->[1];
+            $value{"WWTIME_${device}"}->{'MAX'} = $values[0]->[2];
+        }
+        
         # svctm
         @options = @template;
         
@@ -640,6 +726,26 @@ _EOF_
     foreach my $device (@devices) {
         print $fh ' ' x 14;
         print $fh "<li><a href=\"#wtime_${device}\">I/O Wait Time ${device}</a></li>\n";
+    }
+    
+    if ($flag_sysstat_090102) {
+        print $fh <<_EOF_;
+              <li class="nav-header">I/O Read Wait Time</li>
+_EOF_
+        
+        foreach my $device (@devices) {
+            print $fh ' ' x 14;
+            print $fh "<li><a href=\"#rwtime_${device}\">I/O Read Wait Time ${device}</a></li>\n";
+        }
+        
+        print $fh <<_EOF_;
+              <li class="nav-header">I/O Write Wait Time</li>
+_EOF_
+        
+        foreach my $device (@devices) {
+            print $fh ' ' x 14;
+            print $fh "<li><a href=\"#wwtime_${device}\">I/O Write Wait Time ${device}</a></li>\n";
+        }
     }
     
     print $fh <<_EOF_;
@@ -868,6 +974,68 @@ _EOF_
             </tbody>
           </table>
 _EOF_
+    }
+    
+    if ($flag_sysstat_090102) {
+        print $fh <<_EOF_;
+          <hr />
+          <h2>I/O Read Wait Time</h2>
+_EOF_
+        
+        foreach my $device (@devices) {
+            print $fh <<_EOF_;
+          <h3 id="rwtime_${device}">I/O Read Wait Time ${device}</h3>
+          <p><img src="rwtime_${device}.png" alt="I/O Read Wait Time ${device}"></p>
+          <table class="table table-condensed">
+            <thead>
+              <tr>
+                <th class="header">I/O Read Wait Time ${device} (millisecs)</th>
+                <th class="header">Minimum</th>
+                <th class="header">Average</th>
+                <th class="header">Maximum</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>read_wait_time</td>
+                <td class="number">$value{"RWTIME_${device}"}->{'MIN'}</td>
+                <td class="number">$value{"RWTIME_${device}"}->{'AVG'}</td>
+                <td class="number">$value{"RWTIME_${device}"}->{'MAX'}</td>
+              </tr>
+            </tbody>
+          </table>
+_EOF_
+        }
+        
+        print $fh <<_EOF_;
+          <hr />
+          <h2>I/O Write Wait Time</h2>
+_EOF_
+        
+        foreach my $device (@devices) {
+            print $fh <<_EOF_;
+          <h3 id="wwtime_${device}">I/O Write Wait Time ${device}</h3>
+          <p><img src="wwtime_${device}.png" alt="I/O Write Wait Time ${device}"></p>
+          <table class="table table-condensed">
+            <thead>
+              <tr>
+                <th class="header">I/O Write Wait Time ${device} (millisecs)</th>
+                <th class="header">Minimum</th>
+                <th class="header">Average</th>
+                <th class="header">Maximum</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>write_wait_time</td>
+                <td class="number">$value{"WWTIME_${device}"}->{'MIN'}</td>
+                <td class="number">$value{"WWTIME_${device}"}->{'AVG'}</td>
+                <td class="number">$value{"WWTIME_${device}"}->{'MAX'}</td>
+              </tr>
+            </tbody>
+          </table>
+_EOF_
+        }
     }
     
     print $fh <<_EOF_;
