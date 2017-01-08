@@ -11,8 +11,8 @@ use RRDs;
 use Text::ParseWords;
 use Time::Local;
 
-if ($#ARGV != 8) {
-    die 'Usage: perl iostat2graph.pl csv_file report_dir width height requests_limit bytes_limit qlength_limit wtime_limit stime_limit';
+if (($#ARGV != 8) and ($#ARGV != 9)) {
+    die 'Usage: perl iostat2graph.pl csv_file report_dir width height requests_limit bytes_limit qlength_limit wtime_limit stime_limit [is_actual]';
 }
 
 my $csv_file       = $ARGV[0];
@@ -24,6 +24,11 @@ my $bytes_limit    = $ARGV[5];
 my $qlength_limit  = $ARGV[6];
 my $wtime_limit    = $ARGV[7];
 my $stime_limit    = $ARGV[8];
+my $is_actual      = 0;
+
+if ($#ARGV == 9) {
+    $is_actual = $ARGV[9];
+}
 
 my @colors = (
     '008FFF', 'FF00BF', 'BFBF00', 'BF00FF',
@@ -38,7 +43,8 @@ my @colors = (
     );
 
 my $epoch = 978274800; # 2001/01/01 00:00:00
-my $top_dir = '..';
+my $resolution = 3600;
+my $top_dir = '../..';
 my $rrd_file = '/dev/shm/iostat2graphs/' . &random_str() . '.rrd';
 
 my ($hostname, @devices, @data, %value);
@@ -115,7 +121,12 @@ sub load_csv {
                 } else {
                     $flag_duplicate = 0;
                     $end_time = $unixtime;
-                    $buffer = $epoch + $unixtime - $start_time;
+                    
+                    if ($is_actual) {
+                        $buffer = $unixtime;
+                    } else {
+                        $buffer = $epoch + $unixtime - $start_time;
+                    }
                 }
             }
             
@@ -136,67 +147,74 @@ sub load_csv {
 
 sub create_rrd {
     my @options;
-    my $steps = floor(($end_time - $start_time) / 3600) + 1;
-    my $rows = ceil(($end_time - $start_time) / $steps) + 1;
+    my $step = floor(($end_time - $start_time) / $#data + 0.5);
+    my $steps = floor($#data / $resolution) + 1;
+    my $rows = ceil($#data / $steps) + 1;
+    my $heartbeat = $step * 5;
     
     # --start
     push @options, '--start';
-    push @options, $epoch - 1;
+    
+    if ($is_actual) {
+        push @options, $start_time - 1;
+    } else {
+        push @options, $epoch - 1;
+    }
     
     # --step
     push @options, '--step';
-    push @options, 1;
+    push @options, $step;
     
     foreach my $device (@devices) {
         # rrqm/s wrqm/s
-        push @options, "DS:RRMERGE_${device}:GAUGE:5:U:U";
+        push @options, "DS:RRMERGE_${device}:GAUGE:${heartbeat}:U:U";
         push @options, "RRA:AVERAGE:0.5:${steps}:${rows}";
         
-        push @options, "DS:WRMERGE_${device}:GAUGE:5:U:U";
+        push @options, "DS:WRMERGE_${device}:GAUGE:${heartbeat}:U:U";
         push @options, "RRA:AVERAGE:0.5:${steps}:${rows}";
         
         # r/s w/s
-        push @options, "DS:RREQ_${device}:GAUGE:5:U:U";
+        push @options, "DS:RREQ_${device}:GAUGE:${heartbeat}:U:U";
         push @options, "RRA:AVERAGE:0.5:${steps}:${rows}";
         
-        push @options, "DS:WREQ_${device}:GAUGE:5:U:U";
+        push @options, "DS:WREQ_${device}:GAUGE:${heartbeat}:U:U";
         push @options, "RRA:AVERAGE:0.5:${steps}:${rows}";
         
         # rBytes/s wBytes/s
-        push @options, "DS:RBYTE_${device}:GAUGE:5:U:U";
+        push @options, "DS:RBYTE_${device}:GAUGE:${heartbeat}:U:U";
         push @options, "RRA:AVERAGE:0.5:${steps}:${rows}";
         
-        push @options, "DS:WBYTE_${device}:GAUGE:5:U:U";
+        push @options, "DS:WBYTE_${device}:GAUGE:${heartbeat}:U:U";
         push @options, "RRA:AVERAGE:0.5:${steps}:${rows}";
         
         # avgrq-sz (Bytes)
-        push @options, "DS:RSIZE_${device}:GAUGE:5:U:U";
+        push @options, "DS:RSIZE_${device}:GAUGE:${heartbeat}:U:U";
         push @options, "RRA:AVERAGE:0.5:${steps}:${rows}";
         
         # avgqu-sz
-        push @options, "DS:QLENGTH_${device}:GAUGE:5:U:U";
+        push @options, "DS:QLENGTH_${device}:GAUGE:${heartbeat}:U:U";
         push @options, "RRA:AVERAGE:0.5:${steps}:${rows}";
         
         # await
-        push @options, "DS:WTIME_${device}:GAUGE:5:U:U";
+        push @options, "DS:WTIME_${device}:GAUGE:${heartbeat}:U:U";
         push @options, "RRA:AVERAGE:0.5:${steps}:${rows}";
         
         if ($flag_sysstat_090102) {
             # await
-            push @options, "DS:RWTIME_${device}:GAUGE:5:U:U";
+            push @options, "DS:RWTIME_${device}:GAUGE:${heartbeat}:U:U";
             push @options, "RRA:AVERAGE:0.5:${steps}:${rows}";
             
             # await
-            push @options, "DS:WWTIME_${device}:GAUGE:5:U:U";
+            push @options, "DS:WWTIME_${device}:GAUGE:${heartbeat}:U:U";
             push @options, "RRA:AVERAGE:0.5:${steps}:${rows}";
         }
         
         # svctm
-        push @options, "DS:STIME_${device}:GAUGE:5:U:U";
+        push @options, "DS:STIME_${device}:GAUGE:${heartbeat}:U:U";
         push @options, "RRA:AVERAGE:0.5:${steps}:${rows}";
         
         # %util
-        push @options, "DS:UTIL_${device}:GAUGE:5:U:U";
+        push @options, "DS:UTIL_${device}:GAUGE:${heartbeat}:U:U";
         push @options, "RRA:AVERAGE:0.5:${steps}:${rows}";
     }
     
@@ -229,14 +247,26 @@ sub create_dir {
 
 sub create_graph {
     my (@template, @options, @values);
-    my $window = (floor(($end_time - $start_time) / 3600) + 1) * 60;
+    my $step = floor(($end_time - $start_time) / $#data + 0.5);
+    my $steps = floor($#data / $resolution) + 1;
+    my $window = $step * $steps * 60;
     
     # Template
     push @template, '--start';
-    push @template, $epoch;
+    
+    if ($is_actual) {
+        push @template, $start_time;
+    } else {
+        push @template, $epoch;
+    }    
     
     push @template, '--end';
-    push @template, $epoch + $end_time - $start_time;
+    
+    if ($is_actual) {
+        push @template, $end_time;
+    } else {
+        push @template, $epoch + $end_time - $start_time;
+    }
     
     push @template, '--width';
     push @template, $width;
