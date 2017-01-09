@@ -17,13 +17,14 @@
     <div class="container-fluid">
       <div class="hero-unit">
         <h1>iostat2graphs</h1>
-        <p>It works only for iostat CSV files.</p>
+        <p>Drawing graphs from a iostat CSV file.</p>
       </div>
+      <p>This web application accepts files output from <a href="https://github.com/sh2/rstat">rstat</a>.</p>
       <form action="iostat2graphs.php" method="post" enctype="multipart/form-data" class="form-horizontal">
         <fieldset>
-          <legend>CSV File</legend>
+          <legend>iostat CSV File</legend>
           <div class="control-group">
-            <label class="control-label">CSV File</label>
+            <label class="control-label">iostat CSV File</label>
             <div class="controls">
               <!-- <input type="hidden" name="MAX_FILE_SIZE" value="4194304" /> -->
               <input type="file" name="csv_file" size="50" class="validate-file" />
@@ -49,7 +50,7 @@
           </div>
           </fieldset>
         <fieldset>
-          <legend>Upper Limits</legend>
+          <legend>Graph Upper Limits</legend>
           <div class="control-group">
             <label class="control-label">I/O Requests</label>
             <div class="controls">
@@ -85,17 +86,28 @@
               <span class="help-inline"></span>
             </div>
           </div>
+        </fieldset>
+        <fieldset>
+          <legend>Other Settings</legend>
           <div class="control-group">
+            <label class="control-label">X-axis</label>
             <div class="controls">
-              <input type="submit" value="Upload" class="btn span3" />
-              <input type="reset" value="Reset" class="btn span2" />
+              <input type="radio" name="is_actual" value="0" class="span1" checked />Elapsed Time
+              <input type="radio" name="is_actual" value="1" class="span1" />Actual Time
             </div>
           </div>
         </fieldset>
+        <div class="control-group">
+          <div class="controls">
+            <input type="submit" value="Upload" class="btn span3" />
+            <input type="reset" value="Reset" class="btn span2" />
+          </div>
+        </div>
       </form>
       <hr />
       <div class="footer">
-        (c) 2012, Sadao Hiratsuka.
+        <a href="https://github.com/sh2/iostat2graphs">https://github.com/sh2/iostat2graphs</a><br />
+        (c) 2012-2017, Sadao Hiratsuka.
       </div>
     </div>
     <script src="js/jquery-1.7.2.min.js"></script>
