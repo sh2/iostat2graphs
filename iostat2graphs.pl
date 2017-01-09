@@ -1133,7 +1133,8 @@ _EOF_
       </div>
       <hr />
       <div class="footer">
-        (c) 2012, Sadao Hiratsuka.
+        <a href="https://github.com/sh2/iostat2graphs">https://github.com/sh2/iostat2graphs</a><br />
+        (c) 2012-2017, Sadao Hiratsuka.
       </div>
     </div>
     <script src="${top_dir}/js/jquery-1.7.2.min.js"></script>
