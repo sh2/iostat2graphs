@@ -1137,7 +1137,7 @@ _EOF_
         (c) 2012-2017, Sadao Hiratsuka.
       </div>
     </div>
-    <script src="${top_dir}/js/jquery-1.7.2.min.js"></script>
+    <script src="${top_dir}/js/jquery-1.12.4.min.js"></script>
     <script src="${top_dir}/js/bootstrap.min.js"></script>
   </body>
 </html>
