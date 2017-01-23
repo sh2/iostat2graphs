@@ -54,35 +54,35 @@
           <div class="control-group">
             <label class="control-label">I/O Requests</label>
             <div class="controls">
-              <input type="text" name="requests_limit" value="0" class="span2 validate-limit" /> (/sec)
+              <input type="text" name="requests_limit" value="0" class="span2 validate-natural" /> (/sec)
               <span class="help-inline"></span>
             </div>
           </div>
           <div class="control-group">
             <label class="control-label">I/O Bytes</label>
             <div class="controls">
-              <input type="text" name="bytes_limit" value="0" class="span2 validate-limit" /> (Bytes/sec)
+              <input type="text" name="bytes_limit" value="0" class="span2 validate-natural" /> (Bytes/sec)
               <span class="help-inline"></span>
             </div>
           </div>
           <div class="control-group">
             <label class="control-label">I/O Queue Length</label>
             <div class="controls">
-              <input type="text" name="qlength_limit" value="0" class="span2 validate-limit" />
+              <input type="text" name="qlength_limit" value="0" class="span2 validate-natural" />
               <span class="help-inline"></span>
             </div>
           </div>
           <div class="control-group">
             <label class="control-label">I/O Wait Time</label>
             <div class="controls">
-              <input type="text" name="wtime_limit" value="0" class="span2 validate-limit" /> (millisec)
+              <input type="text" name="wtime_limit" value="0" class="span2 validate-natural" /> (millisec)
               <span class="help-inline"></span>
             </div>
           </div>
           <div class="control-group">
             <label class="control-label">I/O Service Time</label>
             <div class="controls">
-              <input type="text" name="stime_limit" value="0" class="span2 validate-limit" /> (millisec)
+              <input type="text" name="stime_limit" value="0" class="span2 validate-natural" /> (millisec)
               <span class="help-inline"></span>
             </div>
           </div>
@@ -94,6 +94,20 @@
             <div class="controls">
               <input type="radio" name="is_actual" value="0" class="span1" checked />Elapsed Time
               <input type="radio" name="is_actual" value="1" class="span1" />Actual Time
+            </div>
+          </div>
+          <div class="control-group">
+            <label class="control-label">Offset</label>
+            <div class="controls">
+              <input type="text" name="offset" value="0" class="span2 validate-natural" /> (seconds)
+              <span class="help-inline"></span>
+            </div>
+          </div>
+          <div class="control-group">
+            <label class="control-label">Duration</label>
+            <div class="controls">
+              <input type="text" name="duration" value="0" class="span2 validate-natural" /> (seconds)
+              <span class="help-inline"></span>
             </div>
           </div>
         </fieldset>
@@ -141,7 +155,7 @@
                 help.text('Please enter a value between 64 and 1024.');
                 isValid = false;
               }
-            } else if ($(this).hasClass('validate-limit')) {
+            } else if ($(this).hasClass('validate-natural')) {
               if (!value.match(/^-?\d+$/) || (value < 0)) {
                 control.addClass('error');
                 help.text('Please enter a value greater than or equal to 0.');
