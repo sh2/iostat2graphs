@@ -299,7 +299,7 @@ sub create_graph {
         @options = @template;
         
         push @options, '--title';
-        push @options, "I/O Requests Merged ${device} (/sec)";
+        push @options, "I/O Requests Merged ${device} (/second)";
         
         push @options, "DEF:RRMERGE=${rrd_file}:RRMERGE_${device}:AVERAGE";
         push @options, "LINE1:RRMERGE#${colors[0]}:read";
@@ -344,7 +344,7 @@ sub create_graph {
         }
         
         push @options, '--title';
-        push @options, "I/O Requests ${device} (/sec)";
+        push @options, "I/O Requests ${device} (/second)";
         
         push @options, "DEF:RREQ=${rrd_file}:RREQ_${device}:AVERAGE";
         push @options, "LINE1:RREQ#${colors[0]}:read";
@@ -392,7 +392,7 @@ sub create_graph {
         push @options, 1024;
         
         push @options, '--title';
-        push @options, "I/O Bytes ${device} (Bytes/sec)";
+        push @options, "I/O Bytes ${device} (Bytes/second)";
         
         push @options, "DEF:RBYTE=${rrd_file}:RBYTE_${device}:AVERAGE";
         push @options, "LINE1:RBYTE#${colors[0]}:read";
@@ -505,7 +505,7 @@ sub create_graph {
         }
         
         push @options, '--title';
-        push @options, "I/O Wait Time ${device} (millisecs)";
+        push @options, "I/O Wait Time ${device} (Milliseconds)";
         
         push @options, "DEF:WTIME=${rrd_file}:WTIME_${device}:AVERAGE";
         push @options, "AREA:WTIME#${colors[0]}:wait_time";
@@ -541,7 +541,7 @@ sub create_graph {
             }
             
             push @options, '--title';
-            push @options, "I/O Read Wait Time ${device} (millisecs)";
+            push @options, "I/O Read Wait Time ${device} (Milliseconds)";
             
             push @options, "DEF:RWTIME=${rrd_file}:RWTIME_${device}:AVERAGE";
             push @options, "AREA:RWTIME#${colors[0]}:read_wait_time";
@@ -576,7 +576,7 @@ sub create_graph {
             }
             
             push @options, '--title';
-            push @options, "I/O Write Wait Time ${device} (millisecs)";
+            push @options, "I/O Write Wait Time ${device} (Milliseconds)";
             
             push @options, "DEF:WWTIME=${rrd_file}:WWTIME_${device}:AVERAGE";
             push @options, "AREA:WWTIME#${colors[0]}:write_wait_time";
@@ -612,7 +612,7 @@ sub create_graph {
         }
         
         push @options, '--title';
-        push @options, "I/O Service Time ${device} (millisecs)";
+        push @options, "I/O Service Time ${device} (Milliseconds)";
         
         push @options, "DEF:STIME=${rrd_file}:STIME_${device}:AVERAGE";
         push @options, "AREA:STIME#${colors[0]}:service_time";
@@ -821,10 +821,10 @@ _EOF_
             <ul>
               <li>Hostname: ${report_hostname}</li>
               <li>Datetime: ${report_datetime}</li>
-              <li>Duration: ${report_duration} (secs)</li>
+              <li>Duration: ${report_duration} (Seconds)</li>
             </ul>
           </div>
-          <p><a href="i_${report_suffix}.zip">Download a Zip file</a></p>
+          <p><a href="i_${report_suffix}.zip">Download ZIP</a></p>
           <h2>I/O Requests Merged</h2>
 _EOF_
     
@@ -835,7 +835,7 @@ _EOF_
           <table class="table table-condensed">
             <thead>
               <tr>
-                <th class="header">I/O Requests Merged ${device} (/sec)</th>
+                <th class="header">I/O Requests Merged ${device} (/second)</th>
                 <th class="header">Minimum</th>
                 <th class="header">Average</th>
                 <th class="header">Maximum</th>
@@ -871,7 +871,7 @@ _EOF_
           <table class="table table-condensed">
             <thead>
               <tr>
-                <th class="header">I/O Requests ${device} (/sec)</th>
+                <th class="header">I/O Requests ${device} (/second)</th>
                 <th class="header">Minimum</th>
                 <th class="header">Average</th>
                 <th class="header">Maximum</th>
@@ -907,7 +907,7 @@ _EOF_
           <table class="table table-condensed">
             <thead>
               <tr>
-                <th class="header">I/O Bytes ${device} (Bytes/sec)</th>
+                <th class="header">I/O Bytes ${device} (Bytes/second)</th>
                 <th class="header">Minimum</th>
                 <th class="header">Average</th>
                 <th class="header">Maximum</th>
@@ -1003,7 +1003,7 @@ _EOF_
           <table class="table table-condensed">
             <thead>
               <tr>
-                <th class="header">I/O Wait Time ${device} (millisecs)</th>
+                <th class="header">I/O Wait Time ${device} (Milliseconds)</th>
                 <th class="header">Minimum</th>
                 <th class="header">Average</th>
                 <th class="header">Maximum</th>
@@ -1034,7 +1034,7 @@ _EOF_
           <table class="table table-condensed">
             <thead>
               <tr>
-                <th class="header">I/O Read Wait Time ${device} (millisecs)</th>
+                <th class="header">I/O Read Wait Time ${device} (Milliseconds)</th>
                 <th class="header">Minimum</th>
                 <th class="header">Average</th>
                 <th class="header">Maximum</th>
@@ -1064,7 +1064,7 @@ _EOF_
           <table class="table table-condensed">
             <thead>
               <tr>
-                <th class="header">I/O Write Wait Time ${device} (millisecs)</th>
+                <th class="header">I/O Write Wait Time ${device} (Milliseconds)</th>
                 <th class="header">Minimum</th>
                 <th class="header">Average</th>
                 <th class="header">Maximum</th>
@@ -1095,7 +1095,7 @@ _EOF_
           <table class="table table-condensed">
             <thead>
               <tr>
-                <th class="header">I/O Service Time ${device} (millisecs)</th>
+                <th class="header">I/O Service Time ${device} (Milliseconds)</th>
                 <th class="header">Minimum</th>
                 <th class="header">Average</th>
                 <th class="header">Maximum</th>
