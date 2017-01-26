@@ -215,11 +215,11 @@ sub create_rrd {
         push @options, "RRA:AVERAGE:0.5:${steps}:${rows}";
         
         if ($flag_sysstat_090102) {
-            # await
+            # r_await
             push @options, "DS:RWTIME_${device}:GAUGE:${heartbeat}:U:U";
             push @options, "RRA:AVERAGE:0.5:${steps}:${rows}";
             
-            # await
+            # w_await
             push @options, "DS:WWTIME_${device}:GAUGE:${heartbeat}:U:U";
             push @options, "RRA:AVERAGE:0.5:${steps}:${rows}";
         }
@@ -321,7 +321,7 @@ sub create_graph {
         push @options, "VDEF:W_MAX=WRMERGE,MAXIMUM";
         push @options, "PRINT:W_MAX:%4.2lf";
         
-        @values = RRDs::graph("${report_dir}/rmerged_${device}.png", @options);
+        @values = RRDs::graph("${report_dir}/rmerged_${device}_rw.png", @options);
         
         if (my $error = RRDs::error) {
             &delete_rrd();
@@ -334,6 +334,44 @@ sub create_graph {
         $value{"WRMERGE_${device}"}->{'MIN'} = $values[0]->[3];
         $value{"WRMERGE_${device}"}->{'AVG'} = $values[0]->[4];
         $value{"WRMERGE_${device}"}->{'MAX'} = $values[0]->[5];
+        
+        # read
+        @options = @template;
+        
+        push @options, '--title';
+        push @options, "I/O Requests Merged read ${device} (/second)";
+        
+        push @options, "DEF:RRMERGE=${rrd_file}:RRMERGE_${device}:AVERAGE";
+        push @options, "AREA:RRMERGE#${colors[0]}:read";
+        
+        push @options, "CDEF:RRMERGE_AVG=RRMERGE,${window},TREND";
+        push @options, "LINE1:RRMERGE_AVG#${colors[1]}:read_${window}seconds";
+        
+        RRDs::graph("${report_dir}/rmerged_${device}_r.png", @options);
+        
+        if (my $error = RRDs::error) {
+            &delete_rrd();
+            die $error;
+        }
+        
+        # write
+        @options = @template;
+        
+        push @options, '--title';
+        push @options, "I/O Requests Merged write ${device} (/second)";
+        
+        push @options, "DEF:WRMERGE=${rrd_file}:WRMERGE_${device}:AVERAGE";
+        push @options, "AREA:WRMERGE#${colors[0]}:write";
+        
+        push @options, "CDEF:WRMERGE_AVG=WRMERGE,${window},TREND";
+        push @options, "LINE1:WRMERGE_AVG#${colors[1]}:write_${window}seconds";
+        
+        RRDs::graph("${report_dir}/rmerged_${device}_w.png", @options);
+        
+        if (my $error = RRDs::error) {
+            &delete_rrd();
+            die $error;
+        }
         
         # r/s w/s
         @options = @template;
@@ -366,7 +404,7 @@ sub create_graph {
         push @options, "VDEF:W_MAX=WREQ,MAXIMUM";
         push @options, "PRINT:W_MAX:%4.2lf";
         
-        @values = RRDs::graph("${report_dir}/requests_${device}.png", @options);
+        @values = RRDs::graph("${report_dir}/requests_${device}_rw.png", @options);
         
         if (my $error = RRDs::error) {
             &delete_rrd();
@@ -379,6 +417,54 @@ sub create_graph {
         $value{"WREQ_${device}"}->{'MIN'} = $values[0]->[3];
         $value{"WREQ_${device}"}->{'AVG'} = $values[0]->[4];
         $value{"WREQ_${device}"}->{'MAX'} = $values[0]->[5];
+        
+        # read
+        @options = @template;
+        
+        if ($requests_limit != 0) {
+            push @options, '--upper-limit';
+            push @options, $requests_limit;
+        }
+        
+        push @options, '--title';
+        push @options, "I/O Requests ${device} read (/second)";
+        
+        push @options, "DEF:RREQ=${rrd_file}:RREQ_${device}:AVERAGE";
+        push @options, "AREA:RREQ#${colors[0]}:read";
+        
+        push @options, "CDEF:RREQ_AVG=RREQ,${window},TREND";
+        push @options, "LINE1:RREQ_AVG#${colors[1]}:read_${window}seconds";
+        
+        RRDs::graph("${report_dir}/requests_${device}_r.png", @options);
+        
+        if (my $error = RRDs::error) {
+            &delete_rrd();
+            die $error;
+        }
+        
+        # write
+        @options = @template;
+        
+        if ($requests_limit != 0) {
+            push @options, '--upper-limit';
+            push @options, $requests_limit;
+        }
+        
+        push @options, '--title';
+        push @options, "I/O Requests ${device} write (/second)";
+        
+        push @options, "DEF:WREQ=${rrd_file}:WREQ_${device}:AVERAGE";
+        push @options, "AREA:WREQ#${colors[0]}:read";
+        
+        push @options, "CDEF:WREQ_AVG=WREQ,${window},TREND";
+        push @options, "LINE1:WREQ_AVG#${colors[1]}:read_${window}seconds";
+        
+        RRDs::graph("${report_dir}/requests_${device}_w.png", @options);
+        
+        if (my $error = RRDs::error) {
+            &delete_rrd();
+            die $error;
+        }
         
         # rBytes/s wBytes/s
         @options = @template;
@@ -414,7 +500,7 @@ sub create_graph {
         push @options, "VDEF:W_MAX=WBYTE,MAXIMUM";
         push @options, "PRINT:W_MAX:%4.2lf %s";
         
-        @values = RRDs::graph("${report_dir}/bytes_${device}.png", @options);
+        @values = RRDs::graph("${report_dir}/bytes_${device}_rw.png", @options);
         
         if (my $error = RRDs::error) {
             &delete_rrd();
@@ -428,7 +514,61 @@ sub create_graph {
         $value{"WBYTE_${device}"}->{'AVG'} = $values[0]->[4];
         $value{"WBYTE_${device}"}->{'MAX'} = $values[0]->[5];
         
-        # avgrq-sz (Bytes)
+        # read
+        @options = @template;
+        
+        if ($bytes_limit != 0) {
+            push @options, '--upper-limit';
+            push @options, $bytes_limit;
+        }
+        
+        push @options, '--base';
+        push @options, 1024;
+        
+        push @options, '--title';
+        push @options, "I/O Bytes ${device} read (Bytes/second)";
+        
+        push @options, "DEF:RBYTE=${rrd_file}:RBYTE_${device}:AVERAGE";
+        push @options, "AREA:RBYTE#${colors[0]}:read";
+        
+        push @options, "CDEF:RBYTE_AVG=RBYTE,${window},TREND";
+        push @options, "LINE1:RBYTE_AVG#${colors[1]}:read_${window}seconds";
+        
+        RRDs::graph("${report_dir}/bytes_${device}_r.png", @options);
+        
+        if (my $error = RRDs::error) {
+            &delete_rrd();
+            die $error;
+        }
+        
+        # write
+        @options = @template;
+        
+        if ($bytes_limit != 0) {
+            push @options, '--upper-limit';
+            push @options, $bytes_limit;
+        }
+        
+        push @options, '--base';
+        push @options, 1024;
+        
+        push @options, '--title';
+        push @options, "I/O Bytes ${device} write (Bytes/second)";
+        
+        push @options, "DEF:WBYTE=${rrd_file}:WBYTE_${device}:AVERAGE";
+        push @options, "AREA:WBYTE#${colors[0]}:write";
+        
+        push @options, "CDEF:WBYTE_AVG=WBYTE,${window},TREND";
+        push @options, "LINE1:WBYTE_AVG#${colors[1]}:write_${window}seconds";
+        
+        RRDs::graph("${report_dir}/bytes_${device}_w.png", @options);
+        
+        if (my $error = RRDs::error) {
+            &delete_rrd();
+            die $error;
+        }
+        
+        # avgrq-sz
         @options = @template;
         
         push @options, '--base';
@@ -831,7 +971,9 @@ _EOF_
     foreach my $device (@devices) {
         print $fh <<_EOF_;
           <h3 id="rmerged_${device}">I/O Requests Merged ${device}</h3>
-          <p><img src="rmerged_${device}.png" alt="I/O Requests Merged ${device}"></p>
+          <p><img src="rmerged_${device}_rw.png" alt="I/O Requests Merged ${device}"></p>
+          <p><img src="rmerged_${device}_r.png" alt="I/O Requests Merged read ${device}"></p>
+          <p><img src="rmerged_${device}_w.png" alt="I/O Requests Merged write ${device}"></p>
           <table class="table table-condensed">
             <thead>
               <tr>
@@ -867,7 +1009,9 @@ _EOF_
     foreach my $device (@devices) {
         print $fh <<_EOF_;
           <h3 id="requests_${device}">I/O Requests ${device}</h3>
-          <p><img src="requests_${device}.png" alt="I/O Requests ${device}"></p>
+          <p><img src="requests_${device}_rw.png" alt="I/O Requests ${device}"></p>
+          <p><img src="requests_${device}_r.png" alt="I/O Requests ${device} read"></p>
+          <p><img src="requests_${device}_w.png" alt="I/O Requests ${device} write"></p>
           <table class="table table-condensed">
             <thead>
               <tr>
@@ -903,7 +1047,9 @@ _EOF_
     foreach my $device (@devices) {
         print $fh <<_EOF_;
           <h3 id="bytes_${device}">I/O Bytes ${device}</h3>
-          <p><img src="bytes_${device}.png" alt="I/O Bytes ${device}"></p>
+          <p><img src="bytes_${device}_rw.png" alt="I/O Bytes ${device}"></p>
+          <p><img src="bytes_${device}_r.png" alt="I/O Bytes ${device} read"></p>
+          <p><img src="bytes_${device}_w.png" alt="I/O Bytes ${device} write"></p>
           <table class="table table-condensed">
             <thead>
               <tr>
