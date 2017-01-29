@@ -63,7 +63,7 @@ Webブラウザでhttp://&lt;server\_host&gt;/&lt;script\_dir&gt;/にアクセスすると、C
     - Height … グラフの縦サイズを指定します。単位はピクセルです。
 - Graph Upper Limits
     - I/O Requests … I/O Requestsのグラフについて、Y軸の最大値を指定します。単位は回/秒です。0を指定すると自動調節します。
-    - I/O Bytes (Bytes/second) … I/O Bytesのグラフについて、Y軸の最大値を指定します。単位はバイト/秒です。0を指定すると自動調節します。
+    - I/O Bytes … I/O Bytesのグラフについて、Y軸の最大値を指定します。単位はバイト/秒です。0を指定すると自動調節します。
     - I/O Queue Length … I/O Queue Lengthのグラフについて、Y軸の最大値を指定します。0を指定すると自動調節します。
     - I/O Wait Time … I/O Wait Timeのグラフについて、Y軸の最大値を指定します。単位はミリ秒です。0を指定すると自動調節します。
     - I/O Service Time … I/O Service Timeのグラフについて、Y軸の最大値を指定します。単位はミリ秒です。0を指定すると自動調節します。
