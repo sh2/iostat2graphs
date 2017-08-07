@@ -6,11 +6,11 @@
 
 以下のデモサイトで実際に使用できます。
 
-- [iostat2graphs - dbstudy.info](http://dbstudy.info/iostat2graphs)
+- [iostat2graphs - dbstudy.info](https://dbstudy.info/iostat2graphs)
 
 出力結果のサンプルです。
 
-- [k01sl6.local 2017/01/29 17:54:14 - iostat2graphs](http://dbstudy.info/iostat2graphs/reports/20170129-190230_hUjRTRUR/)
+- [k01sl6.local 2017/01/29 17:54:14 - iostat2graphs](https://dbstudy.info/iostat2graphs/reports/20170129-190230_hUjRTRUR/)
 
 デモサイトの使用に際しては、次の点に注意してください。
 

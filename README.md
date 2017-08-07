@@ -4,11 +4,11 @@ This is a web application which draws graphs from an iostat log file output by [
 
 You can use the demo site below.
 
-- [iostat2graphs - dbstudy.info](http://dbstudy.info/iostat2graphs)
+- [iostat2graphs - dbstudy.info](https://dbstudy.info/iostat2graphs)
 
 Here is a sample output.
 
-- [k01sl6.local 2017/01/29 17:54:14 - iostat2graphs](http://dbstudy.info/iostat2graphs/reports/20170129-190230_hUjRTRUR/)
+- [k01sl6.local 2017/01/29 17:54:14 - iostat2graphs](https://dbstudy.info/iostat2graphs/reports/20170129-190230_hUjRTRUR/)
 
 When you use the demo site, please be aware of the following.
 
