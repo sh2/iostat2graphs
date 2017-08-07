@@ -1,31 +1,31 @@
 # iostat2graphs
 
-[rstat](https://github.com/sh2/rstat)�����Ϥ���iostat�Υ����ե�������Ȥ˥���դ����褹��Web���ץꥱ�������Ǥ���[dstat2graphs](https://github.com/sh2/dstat2graphs)�������ץ������ȤǤ���
+[rstat](https://github.com/sh2/rstat)が出力したiostatのログファイルをもとにグラフを描画するWebアプリケーションです。[dstat2graphs](https://github.com/sh2/dstat2graphs)の派生プロダクトです。
 
-## ����ץ�
+## サンプル
 
-�ʲ��Υǥ⥵���ȤǼºݤ˻��ѤǤ��ޤ���
+以下のデモサイトで実際に使用できます。
 
 - [iostat2graphs - dbstudy.info](http://dbstudy.info/iostat2graphs)
 
-���Ϸ�̤Υ���ץ�Ǥ���
+出力結果のサンプルです。
 
 - [k01sl6.local 2017/01/29 17:54:14 - iostat2graphs](http://dbstudy.info/iostat2graphs/reports/20170129-190230_hUjRTRUR/)
 
-�ǥ⥵���Ȥλ��Ѥ˺ݤ��Ƥϡ������������դ��Ƥ���������
+デモサイトの使用に際しては、次の点に注意してください。
 
-- ���åץ����ɤǤ���CSV�ե����륵�����ϡ�4MBytes�ޤǤǤ���
-- �����������浡ǽ�Ϥ���ޤ���Τǡ���̩���ι⤤�ǡ����ϥ��åץ����ɤ��ʤ��Ǥ���������
+- アップロードできるCSVファイルサイズは、4MBytesまでです。
+- アクセス制御機能はありませんので、機密性の高いデータはアップロードしないでください。
 
-## ���åȥ��å�
+## セットアップ
 
-Red Hat Enterprise Linux 6/7�ȡ������Υ�������ǥ����ȥ�ӥ塼�������оݤˤ��Ƥ��ޤ���
+Red Hat Enterprise Linux 6/7と、それらのクローンディストリビューションを対象にしています。
 
-Apache HTTP Server��PHP�����󥹥ȡ��뤵��Ƥ���ɬ�פ�����ޤ������˥ѥå��������롼��Web Server��PHP Support�򥤥󥹥ȡ��뤷�Ƥ���������
+Apache HTTP ServerとPHPがインストールされている必要があります。初めにパッケージグループWeb ServerとPHP Supportをインストールしてください。
 
     # yum groupinstall 'Web Server' 'PHP Support'
 
-³���ưʲ��Υѥå������򥤥󥹥ȡ��뤷�Ƥ���������
+続いて以下のパッケージをインストールしてください。
 
 - perl-Archive-Zip
 - perl-HTML-Parser
@@ -36,48 +36,48 @@ Apache HTTP Server��PHP�����󥹥ȡ��뤵��Ƥ���ɬ�פ�����ޤ������˥ѥå������
 
     # yum install perl-Archive-Zip perl-HTML-Parser rrdtool rrdtool-perl
 
-�ܥġ���Ϻ�ȥǥ��쥯�ȥ�Ȥ���/dev/shm����Ѥ��ޤ����ʲ��Τ褦�ˤ��ƺ�ȥǥ��쥯�ȥ���������apache�桼�����񤭹��ߤ�Ԥ�����֤ˤ��Ƥ����������ܥġ���򹱵�Ū�˻��Ѥ�����ϡ�/etc/rc.local�˺�ȥǥ��쥯�ȥ�����������ɲä���ʤɤ��Ƥ���������
+本ツールは作業ディレクトリとして/dev/shmを使用します。以下のようにして作業ディレクトリを作成し、apacheユーザが書き込みを行える状態にしてください。本ツールを恒久的に使用する場合は、/etc/rc.localに作業ディレクトリ作成処理を追加するなどしてください。
 
     # mkdir /dev/shm/iostat2graphs
     # chown apache:apache /dev/shm/iostat2graphs
 
-Apache HTTP Server�Υɥ�����ȥ롼���۲��˥�����ץȤ����֤��Ƥ���������������ץȤ����֤����ǥ��쥯�ȥ��ľ����reports�ǥ��쥯�ȥ���������apache�桼�����񤭹��ߤ�Ԥ�����֤ˤ��Ƥ���������
+Apache HTTP Serverのドキュメントルート配下にスクリプトを配置してください。スクリプトを配置したディレクトリの直下にreportsディレクトリを作成し、apacheユーザが書き込みを行える状態にしてください。
 
     # mkdir <document_root>/<script_dir>/reports
     # chown apache:apache <document_root>/<script_dir>/reports
 
-rstat��CSV�ե����륵�������礭����硢PHP���礭�ʥե�����򰷤���褦�ˤ��Ƥ���ɬ�פ�����ޤ���/etc/php.ini�ˤ����ƥѥ�᡼��upload\_max\_filesize��CSV�ե����륵���������礭���ͤ�Ĵ�ᤷ�Ƥ������������ΤȤ�memory\_limit &gt; post\_max\_size &gt; upload\_max\_filesize�Ȥ����ط���������ɬ�פ�����ޤ���
+rstatのCSVファイルサイズが大きい場合、PHPで大きなファイルを扱えるようにしておく必要があります。/etc/php.iniにおいてパラメータupload\_max\_filesizeをCSVファイルサイズよりも大きな値に調節してください。このときmemory\_limit &gt; post\_max\_size &gt; upload\_max\_filesizeという関係を満たす必要があります。
 
     memory_limit = 128M
     post_max_size = 8M
     upload_max_filesize = 2M
 
-## �����ֲ��̤���λȤ���
+## ウェブ画面からの使い方
 
-Web�֥饦����http://&lt;server\_host&gt;/&lt;script\_dir&gt;/�˥�����������ȡ�CSV�ե�����򥢥åץ����ɤ�����̤�ɽ������ޤ���CSV�ե��������ꤷ��Upload�ܥ���򲡤��ȡ�����դ����褵��ޤ���
+Webブラウザでhttp://&lt;server\_host&gt;/&lt;script\_dir&gt;/にアクセスすると、CSVファイルをアップロードする画面が表示されます。CSVファイルを指定してUploadボタンを押すと、グラフが描画されます。
 
 - iostat CSV File
-    - iostat CSV File �� ���åץ����ɤ���CSV�ե��������ꤷ�ޤ���
+    - iostat CSV File … アップロードするCSVファイルを指定します。
 - Graph Size
-    - Width �� ����դβ�����������ꤷ�ޤ���ñ�̤ϥԥ�����Ǥ���
-    - Height �� ����դνĥ���������ꤷ�ޤ���ñ�̤ϥԥ�����Ǥ���
+    - Width … グラフの横サイズを指定します。単位はピクセルです。
+    - Height … グラフの縦サイズを指定します。単位はピクセルです。
 - Graph Upper Limits
-    - I/O Requests �� I/O Requests�Υ���դˤĤ��ơ�Y���κ����ͤ���ꤷ�ޤ���ñ�̤ϲ�/�äǤ���0����ꤹ��ȼ�ưĴ�ᤷ�ޤ���
-    - I/O Bytes �� I/O Bytes�Υ���դˤĤ��ơ�Y���κ����ͤ���ꤷ�ޤ���ñ�̤ϥХ���/�äǤ���0����ꤹ��ȼ�ưĴ�ᤷ�ޤ���
-    - I/O Queue Length �� I/O Queue Length�Υ���դˤĤ��ơ�Y���κ����ͤ���ꤷ�ޤ���0����ꤹ��ȼ�ưĴ�ᤷ�ޤ���
-    - I/O Wait Time �� I/O Wait Time�Υ���դˤĤ��ơ�Y���κ����ͤ���ꤷ�ޤ���ñ�̤ϥߥ��äǤ���0����ꤹ��ȼ�ưĴ�ᤷ�ޤ���
-    - I/O Service Time �� I/O Service Time�Υ���դˤĤ��ơ�Y���κ����ͤ���ꤷ�ޤ���ñ�̤ϥߥ��äǤ���0����ꤹ��ȼ�ưĴ�ᤷ�ޤ���
+    - I/O Requests … I/O Requestsのグラフについて、Y軸の最大値を指定します。単位は回/秒です。0を指定すると自動調節します。
+    - I/O Bytes … I/O Bytesのグラフについて、Y軸の最大値を指定します。単位はバイト/秒です。0を指定すると自動調節します。
+    - I/O Queue Length … I/O Queue Lengthのグラフについて、Y軸の最大値を指定します。0を指定すると自動調節します。
+    - I/O Wait Time … I/O Wait Timeのグラフについて、Y軸の最大値を指定します。単位はミリ秒です。0を指定すると自動調節します。
+    - I/O Service Time … I/O Service Timeのグラフについて、Y軸の最大値を指定します。単位はミリ秒です。0を指定すると自動調節します。
 - Other Settings
-    - X-Axis �� X���˷в���֤�ɽ�����뤫�ºݤλ����ɽ�����뤫�����򤷤ޤ���
-    - Offset �� ���ꤷ�����֤�����CSV�ե��������Ƭ���饫�åȤ������褷�ޤ���ñ�̤��äǤ���
-    - Duration �� CSV�ե��������Ƭ�����뤤��Offset���֤�����ꤷ�����֤Τ����褷�ޤ���ñ�̤��äǤ���0����ꤹ���CSV�ե�����������ޤ����褷�ޤ���
+    - X-Axis … X軸に経過時間を表示するか実際の時刻を表示するかを選択します。
+    - Offset … 指定した時間だけ、CSVファイルの先頭からカットして描画します。単位は秒です。
+    - Duration … CSVファイルの先頭、あるいはOffset位置から指定した時間のみ描画します。単位は秒です。0を指定するとCSVファイルの末尾まで描画します。
 
-## Perl������ץ�ñ�ΤǤλȤ���
+## Perlスクリプト単体での使い方
 
-Perl������ץ�iostat2graphs.pl��ñ�Τǻ��Ѥ��ƥ���դ����褹�뤳�Ȥ���ǽ�Ǥ�����ȥǥ��쥯�ȥ�/dev/shm/iostat2graphs���Ф��ƥ�����ץȼ¹ԥ桼�����񤭹��ߤ�Ԥ�����֤ˤ��Ƥ����Ƥ������������ޥ�ɥ饤�󥪥ץ����ϰʲ����̤�Ǥ������٤ƻ��ꤹ��ɬ�פ�����ޤ���
+Perlスクリプトiostat2graphs.plを単体で使用してグラフを描画することが可能です。作業ディレクトリ/dev/shm/iostat2graphsに対してスクリプト実行ユーザが書き込みを行える状態にしておいてください。コマンドラインオプションは以下の通りです。すべて指定する必要があります。
 
     $ perl iostat2graph.pl csv_file report_dir width height requests_limit bytes_limit qlength_limit wtime_limit stime_limit offset duration is_actual
 
-- report_dir ����դ���Ϥ���ǥ��쥯�ȥ����ꤷ�ޤ����ǥ��쥯�ȥ꤬¸�ߤ��ʤ����ϼ�ư�������ޤ���
+- report_dir グラフを出力するディレクトリを指定します。ディレクトリが存在しない場合は自動作成します。
 
-report_dir�ʳ��Υ��ץ����ϡ������ֲ��̤������Ǥ����Τ�Ʊ���Ǥ���
+report_dir以外のオプションは、ウェブ画面から指定できるものと同じです。
